@@ -6,6 +6,7 @@ from urllib import request
 import base64
 from datetime import datetime, timezone
 import json
+import os
 import uuid
 
 
@@ -113,3 +114,19 @@ def generate_manifest(manifest):
             "image": manifest["@id"],
             "mei_annotations": annotations
     }
+
+
+def extract_base64_mei(jsonld_manifest, directory=None):
+    annotations = jsonld_manifest["mei_annotations"]
+    for n, annotation in zip(range(len(annotations)), annotations):
+        filename = str(n+1) + ".mei"
+        if directory:
+            filename = os.path.join(directory, filename)
+        body = annotation["body"]
+        if "data:application/mei+xml;base64," not in body:
+            print(body)
+            continue
+        b64 = body.split("data:application/mei+xml;base64,")[1]
+        data = base64.b64decode(b64.encode())
+        with open(filename, "wb") as f:
+            f.write(data)
